@@ -27,6 +27,8 @@
     --blue: #60a5fa;
     --blue-dim: rgba(96,165,250,0.12);
     --purple-dim: rgba(167,139,250,0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6,182,212,0.12);
     --radius: 10px;
     --radius-lg: 14px;
   }
@@ -128,6 +130,7 @@
   .stat-val.c-int     { color: var(--accent); }
   .stat-val.c-offer   { color: var(--green); }
   .stat-val.c-rej     { color: var(--red); }
+  .stat-val.c-contacted { color: var(--cyan); }
 
   /* ── Toolbar ─────────────────── */
   .toolbar {
@@ -237,6 +240,7 @@
   .b-Interview  { background: var(--purple-dim); color: #c4b5fd;       border-color: rgba(196,181,253,0.2); }
   .b-Offer      { background: var(--green-dim);  color: var(--green);  border-color: rgba(62,207,142,0.2); }
   .b-Rejected   { background: var(--red-dim);    color: var(--red);    border-color: rgba(240,96,96,0.2); }
+  .b-Contacted  { background: var(--cyan-dim);   color: var(--cyan);   border-color: rgba(6,182,212,0.2); }
 
   /* ── Recruiter cell ──────────── */
   .rec-name    { font-size: 13px; }
@@ -424,6 +428,7 @@
     <select id="filterStatus" onchange="render()">
       <option value="">All statuses</option>
       <option>Applied</option>
+      <option>Contacted (Email or WhatsApp)</option>
       <option>Screening</option>
       <option>Interview</option>
       <option>Offer</option>
@@ -493,6 +498,7 @@
         <label class="form-label">Status</label>
         <select class="form-control" id="fStatus">
           <option>Applied</option>
+          <option>Contacted (Email or WhatsApp)</option>
           <option>Screening</option>
           <option>Interview</option>
           <option>Offer</option>
@@ -605,11 +611,12 @@
     });
 
     // Stats
-    const counts = { Applied: 0, Screening: 0, Interview: 0, Offer: 0, Rejected: 0 };
+    const counts = { Applied: 0, 'Contacted (Email or WhatsApp)': 0, Screening: 0, Interview: 0, Offer: 0, Rejected: 0 };
     apps.forEach(a => counts[a.status] = (counts[a.status] || 0) + 1);
     document.getElementById('stats').innerHTML = `
       <div class="stat"><div class="stat-label">Total</div><div class="stat-val c-total">${apps.length}</div></div>
       <div class="stat"><div class="stat-label">Applied</div><div class="stat-val c-applied">${counts.Applied || 0}</div></div>
+      <div class="stat"><div class="stat-label">Contacted</div><div class="stat-val c-contacted">${counts['Contacted (Email or WhatsApp)'] || 0}</div></div>
       <div class="stat"><div class="stat-label">Screening</div><div class="stat-val c-screen">${counts.Screening || 0}</div></div>
       <div class="stat"><div class="stat-label">Interviews</div><div class="stat-val c-int">${counts.Interview || 0}</div></div>
       <div class="stat"><div class="stat-label">Offers</div><div class="stat-val c-offer">${counts.Offer || 0}</div></div>
@@ -633,7 +640,7 @@
           ${a.source ? `<div class="company-source">${esc(a.source)}</div>` : ''}
         </td>
         <td class="role-text">${esc(a.role)}</td>
-        <td><span class="badge b-${a.status}">${a.status}</span></td>
+        <td><span class="badge ${getBadgeClass(a.status)}">${a.status}</span></td>
         <td><span class="date-text">${fmtDate(a.applied)}</span></td>
         <td><span class="date-text ${isUpcoming(a.intDate) ? 'upcoming' : ''}">${fmtDateTime(a.intDate)}</span></td>
         <td>
@@ -656,6 +663,18 @@
   function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function getBadgeClass(status) {
+    const map = {
+      'Applied': 'b-Applied',
+      'Contacted (Email or WhatsApp)': 'b-Contacted',
+      'Screening': 'b-Screening',
+      'Interview': 'b-Interview',
+      'Offer': 'b-Offer',
+      'Rejected': 'b-Rejected'
+    };
+    return map[status] || 'b-Applied';
   }
 
   // ── Modal ─────────────────────────────────────────────────
