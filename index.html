@@ -454,7 +454,7 @@
             <th>Company</th>
             <th>Role</th>
             <th>Status</th>
-            <th>Applied on</th>
+            <th>Date</th>
             <th>Interview date</th>
             <th>Recruiter</th>
             <th>Follow-up</th>
@@ -496,7 +496,7 @@
 
       <div class="form-group">
         <label class="form-label">Status</label>
-        <select class="form-control" id="fStatus">
+        <select class="form-control" id="fStatus" onchange="updateFormFields()">
           <option>Applied</option>
           <option>Contacted (Email or WhatsApp)</option>
           <option>Screening</option>
@@ -505,9 +505,13 @@
           <option>Rejected</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="appliedGroup">
         <label class="form-label">Applied on</label>
         <input class="form-control" type="date" id="fApplied">
+      </div>
+      <div class="form-group" id="contactedGroup" style="display: none;">
+        <label class="form-label">Contacted on</label>
+        <input class="form-control" type="date" id="fContacted">
       </div>
 
       <div class="form-group">
@@ -641,7 +645,7 @@
         </td>
         <td class="role-text">${esc(a.role)}</td>
         <td><span class="badge ${getBadgeClass(a.status)}">${a.status}</span></td>
-        <td><span class="date-text">${fmtDate(a.applied)}</span></td>
+        <td><span class="date-text">${fmtDate(a.status === 'Contacted (Email or WhatsApp)' ? a.contactedOn : a.applied)}</span></td>
         <td><span class="date-text ${isUpcoming(a.intDate) ? 'upcoming' : ''}">${fmtDateTime(a.intDate)}</span></td>
         <td>
           ${a.recruiter ? `<div class="rec-name">${esc(a.recruiter)}</div>` : '<span style="color:var(--muted)">—</span>'}
@@ -665,16 +669,18 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function getBadgeClass(status) {
-    const map = {
-      'Applied': 'b-Applied',
-      'Contacted (Email or WhatsApp)': 'b-Contacted',
-      'Screening': 'b-Screening',
-      'Interview': 'b-Interview',
-      'Offer': 'b-Offer',
-      'Rejected': 'b-Rejected'
-    };
-    return map[status] || 'b-Applied';
+  function updateFormFields() {
+    const status = document.getElementById('fStatus').value;
+    const appliedGroup = document.getElementById('appliedGroup');
+    const contactedGroup = document.getElementById('contactedGroup');
+    
+    if (status === 'Contacted (Email or WhatsApp)') {
+      appliedGroup.style.display = 'none';
+      contactedGroup.style.display = 'block';
+    } else {
+      appliedGroup.style.display = 'block';
+      contactedGroup.style.display = 'none';
+    }
   }
 
   // ── Modal ─────────────────────────────────────────────────
@@ -687,6 +693,7 @@
       document.getElementById('fRole').value      = a.role       || '';
       document.getElementById('fStatus').value    = a.status     || 'Applied';
       document.getElementById('fApplied').value   = a.applied    || '';
+      document.getElementById('fContacted').value = a.contactedOn || '';
       document.getElementById('fRecruiter').value = a.recruiter  || '';
       document.getElementById('fRecContact').value= a.recContact || '';
       document.getElementById('fCalledOn').value  = a.calledOn   || '';
@@ -698,10 +705,12 @@
       ['fCompany','fRole','fRecruiter','fRecContact','fFollowup','fNotes'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('fStatus').value  = 'Applied';
       document.getElementById('fApplied').value = new Date().toISOString().split('T')[0];
+      document.getElementById('fContacted').value = '';
       document.getElementById('fCalledOn').value = '';
       document.getElementById('fIntDate').value  = '';
       document.getElementById('fSource').value   = '';
     }
+    updateFormFields();
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -725,6 +734,7 @@
       company,    role,
       status:     document.getElementById('fStatus').value,
       applied:    document.getElementById('fApplied').value,
+      contactedOn: document.getElementById('fContacted').value,
       recruiter:  document.getElementById('fRecruiter').value.trim(),
       recContact: document.getElementById('fRecContact').value.trim(),
       calledOn:   document.getElementById('fCalledOn').value,
@@ -754,9 +764,9 @@
   // ── Export CSV ────────────────────────────────────────────
   function exportCSV() {
     if (!apps.length) { showToast('No data to export.'); return; }
-    const headers = ['Company','Role','Status','Applied On','Interview Date','Recruiter','Recruiter Contact','Called On','Source','Follow-up','Notes'];
+    const headers = ['Company','Role','Status','Applied On','Contacted On','Interview Date','Recruiter','Recruiter Contact','Called On','Source','Follow-up','Notes'];
     const rows = apps.map(a => [
-      a.company, a.role, a.status, a.applied, a.intDate,
+      a.company, a.role, a.status, a.applied, a.contactedOn, a.intDate,
       a.recruiter, a.recContact, a.calledOn, a.source, a.followup, a.notes
     ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
     const csv = [headers.join(','), ...rows].join('\n');
