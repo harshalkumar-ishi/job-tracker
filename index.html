@@ -669,6 +669,18 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function getBadgeClass(status) {
+    const map = {
+      'Applied': 'b-Applied',
+      'Contacted (Email or WhatsApp)': 'b-Contacted',
+      'Screening': 'b-Screening',
+      'Interview': 'b-Interview',
+      'Offer': 'b-Offer',
+      'Rejected': 'b-Rejected'
+    };
+    return map[status] || 'b-Applied';
+  }
+
   function updateFormFields() {
     const status = document.getElementById('fStatus').value;
     const appliedGroup = document.getElementById('appliedGroup');
